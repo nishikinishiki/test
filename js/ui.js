@@ -70,7 +70,7 @@ function addBotMessage(messageText, isHtml = false, isError = false, isEbookBtn 
             }
             scrollToBottom();
             resolve(msgElem);
-        }, 200 + Math.random() * 100);
+        }, 100 + Math.random() * 100);
     });
 }
 
@@ -272,12 +272,6 @@ function displayPairedInputs(pairData, onSubmit) {
     if (inputsArray.length > 0) inputsArray[0].focus();
 }
 
-// ★★★★★★★★★★【ここから新規追加】★★★★★★★★★★
-/**
- * カレンダーUIを表示する
- * @param {object} question - カレンダー質問オブジェクト
- * @param {Function} onSubmit - 日付が決定されたときのコールバック
- */
 function displayCalendar(question, onSubmit) {
     if (!dom.inputMethodWrapper) return;
     dom.inputMethodWrapper.style.display = 'block';
@@ -397,7 +391,6 @@ function displayCalendar(question, onSubmit) {
     dom.inputMethodWrapper.innerHTML = '';
     dom.inputMethodWrapper.appendChild(calendarContainer);
 }
-// ★★★★★★★★★★【ここまで新規追加】★★★★★★★★★★
 
 function displayFinalConsentScreen(question, userResponses, initialQuestions, onSubmit) {
     if (!dom.inputMethodWrapper || !dom.chatMessages) return;
@@ -496,17 +489,12 @@ function scrollToBottom() {
     });
 }
 
+// ★★★★★★★★★★【ロジック修正】★★★★★★★★★★
+// タイピングインジケーターを表示しないようにする
 function showTypingIndicator() {
-    if (isBotTyping || !dom.chatMessages) return;
-    isBotTyping = true;
-    const indicator = createMessageWrapper('bot');
-    indicator.classList.add('typing-indicator-wrapper');
-    const messageContent = indicator.querySelector('.message');
-    if (messageContent) {
-        messageContent.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
-    }
-    dom.chatMessages.appendChild(indicator);
-    scrollToBottom();
+    // ユーザーの要望により、通常のメッセージ読み込み中のドットアニメーションは無効化
+    // データ送信中のローディング表示は showLoadingMessage() で別途制御されます。
+    return;
 }
 
 function hideTypingIndicator() {
