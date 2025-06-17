@@ -51,7 +51,7 @@ async function initializeChat() {
     await addBotMessage("J.P.Returnsにお問い合わせいただきありがとうございます！");
     await addBotMessage("30秒程度の簡単な質問をさせてください。");
     
-    setTimeout(askQuestion, 300);
+    setTimeout(askQuestion, 150);
 }
 
 // --- メイン会話フロー ---
@@ -61,8 +61,6 @@ async function askQuestion() {
     let currentQuestion = findNextQuestion();
 
     if (!currentQuestion) {
-        // ★★★★★★★★★★【ロジック修正】★★★★★★★★★★
-        // 全ての質問が完了したときの処理を呼び出す
         handleFlowCompletion();
         return;
     }
@@ -74,9 +72,7 @@ async function askQuestion() {
     if (currentQuestion.pre_message_1) await addBotMessage(currentQuestion.pre_message_1);
     if (currentQuestion.pre_message_2) await addBotMessage(currentQuestion.pre_message_2);
     
-    // 質問文の表示
     if (currentQuestion.question && currentQuestion.answer_method !== 'text-pair') {
-        // final-consentの場合も、案内メッセージとして質問文を表示する
         await addBotMessage(currentQuestion.question, currentQuestion.isHtmlQuestion);
     }
     
@@ -99,6 +95,9 @@ async function askQuestion() {
             displayCalendar(currentQuestion, (value) => handleCalendarInput(currentQuestion, value));
             break;
         case 'final-consent':
+             if (currentQuestion.question) {
+                await addBotMessage(currentQuestion.question, currentQuestion.isHtmlQuestion);
+             }
              displayFinalConsentScreen(currentQuestion, state.userResponses, initialQuestions, () => {
                 state.userResponses[currentQuestion.key] = true;
                 submitDataToGAS(state.userResponses, false);
@@ -129,23 +128,18 @@ function findNextQuestion() {
     return null;
 }
 
-// ★★★★★★★★★★【ロジック追加】★★★★★★★★★★
-/**
- * 現在のフローが完了したときの処理
- */
 function handleFlowCompletion() {
-    // 追加質問フローが完了した場合、データを送信
+    clearInputArea(); 
     if (state.currentFlow === 'additional') {
         submitDataToGAS(state.additionalUserResponses, true);
     }
-    // 初期フローはfinal-consentで処理されるため、ここでは何もしない
 }
 
 function proceedToNextStep() {
     state.completedEffectiveQuestions++;
     state.currentStep++;
     state.subStep = 0;
-    setTimeout(askQuestion, 300);
+    setTimeout(askQuestion, 150);
 }
 
 
@@ -201,7 +195,7 @@ async function handlePairedQuestion(question) {
     } else {
         state.currentStep++;
         state.subStep = 0;
-        setTimeout(askQuestion, 300);
+        setTimeout(askQuestion, 150);
     }
 }
 
@@ -290,8 +284,10 @@ async function submitDataToGAS(dataToSend, isAdditional) {
         } else {
             await addBotMessage("全ての情報を承りました。ご回答ありがとうございました！<br>後ほど担当よりご連絡いたします。", true);
             await addBotMessage("お問い合わせはお電話でも受け付けております。<br>電話番号：<a href='tel:0120147104'>0120-147-104</a><br>営業時間：10:00～22:00（お盆・年末年始除く）", true);
+            
             await addBotMessage("ebook（資料）は下記から閲覧できます！");
-            await addBotMessage("eBookを閲覧する", false, false, true);        }
+            await addBotMessage("eBookを閲覧する", false, false, true);
+        }
 
     } catch (error) {
         hideLoadingMessage();
@@ -314,6 +310,9 @@ async function promptForAdditionalQuestions() {
     
     displayChoices(question, async (value) => {
         addUserMessage(value);
+        // ★★★★★★★★★★【ロジック修正】★★★★★★★★★★
+        clearInputArea(); 
+        
         if (value === "はい") {
             state.additionalUserResponses['interview_preference'] = "はい";
             await addBotMessage("ありがとうございます！<br>では、ご面談日時についてお伺いします。", true);
